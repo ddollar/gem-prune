@@ -1,0 +1,7 @@
+= gem-prune
+
+Description goes here.
+
+== Copyright
+
+Copyright (c) 2009 David Dollar. See LICENSE for details.

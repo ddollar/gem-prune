@@ -29,7 +29,8 @@ class Gem::Commands::PruneCommand < Gem::Command
         next
       end
     end
-  rescue Exception
+  rescue Exception => ex
+    puts "Unhandled Exception: #{ex.message}"
   end
 
 ## commands ##################################################################
@@ -70,6 +71,7 @@ private ######################################################################
           next if ignore_dependency(dep)
           next unless gems[dep.name]
           match = gems[dep.name].versions.sort.reverse.detect { |v| dep =~ v }
+          next unless match
           match.dependants << version
           version.dependencies << match
         end

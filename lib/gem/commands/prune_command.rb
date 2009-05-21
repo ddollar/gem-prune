@@ -22,7 +22,6 @@ class Gem::Commands::PruneCommand < Gem::Command
         print question
         case $stdin.gets.chomp
           when 'k' then keep_gem(name)
-          when 'v' then keep_version(name, versions)
           when 'u' then uninstall(name)
         end
       rescue Gem::FilePermissionError
@@ -36,13 +35,6 @@ class Gem::Commands::PruneCommand < Gem::Command
 ## commands ##################################################################
 
   def keep_gem(name)
-    kept = load_kept_gems
-    kept << name
-    save_kept_gems(kept.uniq)
-  end
-
-  def keep_version(name, versions)
-    question = "Which version"
     kept = load_kept_gems
     kept << name
     save_kept_gems(kept.uniq)

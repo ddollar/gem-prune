@@ -10,9 +10,6 @@ begin
     gem.homepage = "http://github.com/ddollar/gem-prune"
     gem.authors = ["David Dollar"]
     gem.files = Dir['lib/**/*.rb']
-
-    gem.add_dependency 'highline', '>= 1.5.1'
-    gem.add_dependency 'termios',  '>= 0.9.4'
   end
 
 rescue LoadError

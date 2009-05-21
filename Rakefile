@@ -9,7 +9,10 @@ begin
     gem.email = "<ddollar@gmail.com>"
     gem.homepage = "http://github.com/ddollar/gem-prune"
     gem.authors = ["David Dollar"]
-    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
+    gem.files = Dir['lib/**/*.rb']
+
+    gem.add_dependency 'highline', '>= 1.5.1'
+    gem.add_dependency 'termios',  '>= 0.9.4'
   end
 
 rescue LoadError
@@ -45,4 +48,3 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
-

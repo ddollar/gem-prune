@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-$:.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
-require 'gem/commands/prune_command'
-#require File.join(File.dirname(__FILE__), '..', 'lib', 'gem', 'commands', 'prune_command')
+Dir[File.join(File.dirname(__FILE__), '..', 'lib', '**', '*.rb')].each do |file|
+  require file
+end
 
 prune = Gem::Commands::PruneCommand.new
 prune.execute

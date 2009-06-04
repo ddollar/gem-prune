@@ -81,8 +81,11 @@ private ######################################################################
 
   def leaves
     @leaves ||= gems.keys.inject({}) do |memo, name|
+      highest_version = gems[name].versions.sort.reverse.first
       leaves = gems[name].versions.select do |version|
-        version.dependants.length.zero? && !ignore_version(version)
+        version.dependants.length.zero? &&
+        !ignore_version(version) &&
+        version != highest_version
       end
       memo[name] = leaves unless leaves.length.zero?
       memo

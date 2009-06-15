@@ -52,7 +52,6 @@ private ######################################################################
   def gems
     @gems ||= begin
       gems = Gem.source_index.gems.values.inject({}) do |memo, raw|
-        next(memo) if ignore_specification(raw)
         gem = memo[raw.name] || Gem::Prune::Gem.new(raw.name)
         gem.versions << Gem::Prune::Version.new(gem, raw)
         memo.update(raw.name => gem)
@@ -91,10 +90,13 @@ private ######################################################################
 
   def ignore_version(version)
     name = version.name
-    highest_version = gems[name].versions.sort.last
-    needed_versions = gems[name].versions.select { |v| v.dependants.length > 0 }
+    highest_version  = gems[name].versions.sort.last
+    needed_versions  = gems[name].versions.select { |v| v.dependants.length > 0 }
+    ignored_versions = gems[name].versions.select { |v| ignore_specification(v.raw) }
+    return true if ignore_specification(version.raw)
     return true if load_kept_gems.include?(name) && version == highest_version
-    return true if needed_versions.length > 0 && version == highest_version
+    return true if needed_versions.length > 0    && version == highest_version
+    return true if ignored_versions.length > 0   && version == highest_version
     false
   end
 

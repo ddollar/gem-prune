@@ -121,7 +121,7 @@ private ######################################################################
 
   def save_kept_gems(gems)
     File.open(settings_filename, 'w') do |file|
-      file.puts({ 'keep' => gems }.to_yaml)
+      file.puts({ 'keep' => gems.sort }.to_yaml)
     end
   end
 

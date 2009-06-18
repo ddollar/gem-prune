@@ -13,8 +13,10 @@ class Gem::Commands::PruneCommand < Gem::Command
   def execute
     return if leaves.empty?
     leaves.each do |name, versions|
+      leaf_versions = versions.map { |v| v.version }.join(', ')
+      kept_versions = (gems[name].versions - versions).map { |v| v.version }.join(', ')
       begin
-        question  = "#{name} (#{versions.map { |v| v.version }.join(', ')})\n"
+        question  = "#{name} (#{leaf_versions}) keeping (#{kept_versions})\n"
         question << " [k] keep this gem\n"
         question << " [u] uninstall this gem\n"
         question << " [s] skip (default)\n"

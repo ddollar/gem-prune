@@ -1,47 +1,29 @@
-require 'rubygems'
-require 'rake'
+require "rubygems"
+require "bundler"
+Bundler.setup
 
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |gem|
-    gem.name = "gem-prune"
-    gem.summary = %Q{Identify and remove old Rubygems}
-    gem.email = "<ddollar@gmail.com>"
-    gem.homepage = "http://github.com/ddollar/gem-prune"
-    gem.authors = ["David Dollar"]
-    gem.files = Dir['lib/**/*.rb']
-  end
+require "rake"
+require "rspec"
+require "rspec/core/rake_task"
 
-rescue LoadError
-  puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
-end
-
-require 'spec/rake/spectask'
-Spec::Rake::SpecTask.new(:spec) do |spec|
-  spec.libs << 'lib' << 'spec'
-  spec.spec_files = FileList['spec/**/*_spec.rb']
-end
-
-Spec::Rake::SpecTask.new(:rcov) do |spec|
-  spec.libs << 'lib' << 'spec'
-  spec.pattern = 'spec/**/*_spec.rb'
-  spec.rcov = true
-end
-
+$:.unshift File.expand_path("../lib", __FILE__)
+require "gem-prune"
 
 task :default => :spec
+task :release => :man
 
-require 'rake/rdoctask'
-Rake::RDocTask.new do |rdoc|
-  if File.exist?('VERSION.yml')
-    config = YAML.load(File.read('VERSION.yml'))
-    version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
-  else
-    version = ""
-  end
+desc "Run all specs"
+Rspec::Core::RakeTask.new(:spec) do |t|
+  t.pattern = 'spec/**/*_spec.rb'
+end
 
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "gem-prune #{version}"
-  rdoc.rdoc_files.include('README*')
-  rdoc.rdoc_files.include('lib/**/*.rb')
+desc "Generate RCov code coverage report"
+task :rcov => "rcov:build" do
+  %x{ open coverage/index.html }
+end
+
+Rspec::Core::RakeTask.new("rcov:build") do |t|
+  t.pattern = 'spec/**/*_spec.rb'
+  t.rcov = true
+  t.rcov_opts = [ "--exclude", Gem.default_dir , "--exclude", "spec" ]
 end

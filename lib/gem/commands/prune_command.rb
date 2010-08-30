@@ -14,7 +14,8 @@ class Gem::Commands::PruneCommand < Gem::Command
     load_configuration
     mark_kept_versions
     versions_to_prune.each do |version|
-      ui = Gem::Uninstaller.new(version.name, :version => version.version, :ignore => true)
+      ui = Gem::Uninstaller.new(version.name, :version => version.version,
+        :ignore => true, :executables => true)
       ui.uninstall
     end
     save_configuration

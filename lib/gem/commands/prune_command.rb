@@ -11,42 +11,13 @@ class Gem::Commands::PruneCommand < Gem::Command
   end
 
   def execute
-    return if leaves.empty?
-    leaves.each do |name, versions|
-      leaf_versions = versions.map { |v| v.version }.join(', ')
-      kept_versions = (gems[name].versions - versions).map { |v| v.version }.join(', ')
-      begin
-        question  = "#{name} (#{leaf_versions}) keeping (#{kept_versions})\n"
-        question << " [k] keep this gem\n"
-        question << " [u] uninstall this gem\n"
-        question << " [s] skip (default)\n"
-        question << "> "
-        print question
-        case $stdin.gets.chomp
-          when 'k' then keep_gem(name)
-          when 'u' then uninstall(name)
-        end
-      rescue Gem::FilePermissionError
-        puts 'Unable to uninstall. Try sudo?'
-        next
-      end
+    load_configuration
+    mark_kept_versions
+    versions_to_prune.each do |version|
+      ui = Gem::Uninstaller.new(version.name, :version => version.version, :ignore => true)
+      ui.uninstall
     end
-  rescue Exception => ex
-    puts "Unhandled Exception: #{ex.message}"
-  end
-
-## commands ##################################################################
-
-  def keep_gem(name)
-    kept = load_kept_gems
-    kept << name
-    save_kept_gems(kept.uniq)
-  end
-
-  def uninstall(name)
-    leaves[name].each do |version|
-      uninstaller(name, version.version).uninstall
-    end
+    save_configuration
   end
 
 private ######################################################################
@@ -69,7 +40,6 @@ private ######################################################################
     gems.each do |name, gem|
       gem.versions.each do |version|
         version.raw.dependencies.each do |dep|
-          next if ignore_dependency(dep)
           next unless gems[dep.name]
           match = gems[dep.name].versions.sort.reverse.detect { |v| dep =~ v }
           next unless match
@@ -80,51 +50,75 @@ private ######################################################################
     end
   end
 
-  def leaves
-    @leaves ||= gems.keys.inject({}) do |memo, name|
-      leaves = gems[name].versions.select do |version|
-        version.dependants.length.zero? && !ignore_version(version)
+  def load_configuration
+    @configuration ||= begin
+      config = YAML::load_file(settings_filename)
+      config = upgrade_configuration(config) if config.first.first == "keep"
+      unpack_configuration(config)
+    end
+  end
+
+  def save_configuration
+    File.open(settings_filename, "w") do |file|
+      file.puts(YAML::dump(pack_configuration(@configuration)))
+    end
+  end
+
+  def unpack_configuration(config)
+    config.inject({}) do |memo, (gem, keep)|
+      memo.update(gem => keep)
+    end
+  end
+
+  def pack_configuration(config)
+    config.map do |gem, keep|
+      [gem, keep]
+    end.sort_by(&:first)
+  end
+
+  def upgrade_configuration(config)
+    config["keep"].map do |gem|
+      [gem, []]
+    end
+  end
+
+  def gems_to_keep
+    @configuration
+  end
+
+  def mark_kept_versions
+    gems.each do |name, gem|
+      mark_kept(gem.versions.sort.last)
+    end
+    gems_to_keep.each do |name, keep|
+      keep = [">= 0"] if keep.empty?
+      keep.each do |req|
+        next unless gems[name]
+        requirement = Gem::Requirement.new(req)
+        gem_to_keep = gems[name].versions.select do |v|
+          requirement.satisfied_by?(Gem::Version.new(v.version))
+        end.sort.last
+        mark_kept(gem_to_keep) if gem_to_keep
       end
-      memo[name] = leaves unless leaves.length.zero?
-      memo
     end
   end
 
-  def ignore_version(version)
-    name = version.name
-    highest_version  = gems[name].versions.sort.last
-    needed_versions  = gems[name].versions.select { |v| v.dependants.length > 0 }
-    ignored_versions = gems[name].versions.select { |v| ignore_specification(v.raw) }
-    return true if ignore_specification(version.raw)
-    return true if load_kept_gems.include?(name) && version == highest_version
-    return true if needed_versions.length > 0    && version == highest_version
-    return true if ignored_versions.length > 0   && version == highest_version
-    false
+  def mark_kept(version)
+    return if version.keep
+    version.keep = true
+    version.dependencies.each { |v| mark_kept(v) }
   end
 
-  def ignore_specification(specification)
-    return true if specification.loaded_from =~ /\/System\/Library/
-    false
+  def versions_to_keep
+    versions_with_kept_flag(true)
   end
 
-  def ignore_dependency(dependency)
-    false
+  def versions_to_prune
+    versions_with_kept_flag(false)
   end
 
-  def uninstaller(name, version)
-    Gem::Uninstaller.new(name, :version => version, :executables => true)
-  end
-
-  def load_kept_gems
-    YAML::load_file(settings_filename)['keep']
-  rescue
-    []
-  end
-
-  def save_kept_gems(gems)
-    File.open(settings_filename, 'w') do |file|
-      file.puts({ 'keep' => gems.sort }.to_yaml)
-    end
+  def versions_with_kept_flag(value)
+    gems.map { |name, gem| gem.versions }.flatten.select { |v| v.keep == value }
   end
 
   def settings_filename

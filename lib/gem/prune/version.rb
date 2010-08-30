@@ -4,10 +4,12 @@ module Gem; module Prune; class Version
   attr_reader :raw
   attr_reader :dependants
   attr_reader :dependencies
+  attr_accessor :keep
 
   def initialize(gem, raw)
     @gem = gem
     @raw = raw
+    @keep = false
 
     clear_relationships
   end

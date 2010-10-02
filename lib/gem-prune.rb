@@ -1,3 +1,1 @@
-module GemPrune
-  VERSION = "2.0.1"
-end
+require "gem_prune"

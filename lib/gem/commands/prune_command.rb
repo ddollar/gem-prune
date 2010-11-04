@@ -56,7 +56,14 @@ private ######################################################################
 
   def mark_kept_versions
     gems.each do |name, gem|
-      mark_kept(gem.versions.sort.last)
+      gems_versions = gems_to_keep.detect { |g| g.first == name }
+      versions = gems_versions ? gems_versions.last : []
+      if versions.include?("^")
+        puts "weee"
+        versions.delete("^")
+      else
+        mark_kept(gem.versions.sort.last)
+      end
     end
     gems_to_keep.each do |name, keep|
       keep = [">= 0"] if keep.empty?

@@ -19,8 +19,12 @@ class Gem::Commands::KeepCommand < Gem::Command
     keep_gem = get_one_gem_name
     load_configuration
     entry = gems_to_keep.detect { |(gem, versions)| gem == keep_gem }
-    entry[1] << options[:version]
-    entry[1] = entry[1].uniq.compact
+    if entry
+      entry[1] << options[:version]
+      entry[1] = entry[1].uniq.compact
+    else
+      gems_to_keep << [keep_gem, [options[:version]].compact]
+    end
     save_configuration
   end
 

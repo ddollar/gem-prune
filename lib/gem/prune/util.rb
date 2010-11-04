@@ -18,7 +18,7 @@ module Gem; module Prune; module Util
 
   def save_configuration
     File.open(settings_filename, "w") do |file|
-      formatted = @configuration.map do |gem, versions|
+      formatted = @configuration.sort_by(&:first).map do |gem, versions|
         version_string = versions.length.zero? ? "" : " (%s)" % versions.join(", ")
         "#{gem}#{version_string}"
       end.join("\n")

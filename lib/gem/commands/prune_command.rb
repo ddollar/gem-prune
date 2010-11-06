@@ -59,7 +59,6 @@ private ######################################################################
       gems_versions = gems_to_keep.detect { |g| g.first == name }
       versions = gems_versions ? gems_versions.last : []
       if versions.include?("^")
-        puts "weee"
         versions.delete("^")
       else
         mark_kept(gem.versions.sort.last)
